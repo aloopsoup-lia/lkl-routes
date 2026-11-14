@@ -43,7 +43,23 @@ h1 span { color: var(--paint); }
 .brand .mark svg { width: 34px; height: 34px; flex: none; }
 .brand .mark h1 { line-height: .9; }
 .brand .mark h1 small { display: block; font: 600 10px/1 var(--body); letter-spacing: .28em; color: var(--muted); margin-top: 4px; }
-.space { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+.space { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.steps { display: flex; gap: 10px; font: 700 12px/1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.steps span.on { color: var(--paint); }
+.origin { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; }
+.origin button { min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--edge); background: var(--shoulder); font-weight: 600; font-size: 13px; }
+.card.picked { border-color: var(--paint); box-shadow: inset 0 0 0 1px var(--paint); }
+.card .num { display: inline-grid; place-items: center; min-width: 22px; height: 22px; border-radius: 11px; background: var(--paint); color: var(--paint-ink); font: 700 12px/1 var(--display); }
+.buildbar { position: sticky; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 5; display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-radius: 14px; background: var(--fg); color: var(--asphalt); margin-top: 12px; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+.buildbar .txt { flex: 1; font-weight: 600; font-size: 14px; }
+.buildbar button { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 0; background: var(--paint); color: var(--paint-ink); font-weight: 700; white-space: nowrap; }
+.buildbar button.clear { background: transparent; color: var(--asphalt); opacity: .7; padding: 0 8px; }
+.saved { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--edge); border-radius: 14px; background: var(--shoulder); }
+.saved .row { display: flex; gap: 8px; }
+.saved .row button { flex: 1; min-height: 42px; border-radius: 12px; border: 1px solid var(--edge); background: var(--asphalt); color: var(--fg); font-weight: 600; }
+.saved .row button.go { background: var(--paint); color: var(--paint-ink); border-color: var(--paint); }
+.saved .row button.del { flex: 0 0 auto; padding: 0 14px; color: var(--muted); }
+.titlebox input { width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--edge); background: var(--shoulder); color: var(--fg); font: 500 15px var(--body); }
 .space button { min-height: 40px; border-radius: 12px; border: 1px solid var(--edge); background: var(--shoulder); font-weight: 600; font-size: 14px; }
 .space button[aria-pressed="true"] { background: var(--fg); color: var(--asphalt); border-color: var(--fg); }
 .locbar { display: grid; gap: 8px; }
@@ -248,10 +264,13 @@ a.btn { display: flex; flex-direction: column; align-items: center; justify-cont
       <div class="brand"><span class="mark"><svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 30h18M2 36h14M6 24h12M10 42h8" stroke-width="2.4" opacity=".8"/><circle cx="36" cy="32" r="18" stroke-width="3.2"/><circle cx="36" cy="32" r="4" stroke-width="2.4"/><path d="M36 14v14M36 36v14M18 32h14M40 32h14" stroke-width="2" opacity=".55"/></g><path d="M46 8a26 26 0 0 1 14 24" fill="none" stroke="var(--lkl)" stroke-width="4" stroke-linecap="round"/></svg><h1>Left Key Legends <span>Routes</span><small>YOUR CAR, YOUR STORY.</small></h1></span><span class="from" id="fromLabel">from Home</span></div>
       <div class="space" id="space" role="tablist"></div>
       <div class="modes" id="modes" role="tablist"></div>
+      <div class="steps" id="genSteps" hidden><span data-step="1">1 · Start</span><span data-step="2">2 · Pick roads</span><span data-step="3">3 · Build</span></div>
+      <div class="origin" id="originBar" hidden><span id="originText"></span><button id="originChange">Change</button></div>
       <div class="locbar" id="locBar" hidden>
         <div class="row"><button class="go" id="locMe">Use my location</button><input id="locAddr" placeholder="or type a town, e.g. Sylva NC" autocomplete="street-address"><button id="locGo">Go</button></div>
-        <div class="locnote" id="locNote">Pick where you are and the best drives within reach show up here. Covers NC, TN and GA so far.</div>
+        <div class="locnote" id="locNote">Where does the drive start? Covers NC, TN and GA so far.</div>
       </div>
+      <div class="locnote" id="genHint" hidden>Tap roads to add them to your route, in any order. The route is built with the fastest hops between them. Use the rings to look farther out.</div>
       <div class="seg" id="kinds" role="group" aria-label="End at">
         <button data-k="any" aria-pressed="true">Just drive</button>
         <button data-k="hike" aria-pressed="false">Hike or walk</button>
@@ -278,6 +297,7 @@ a.btn { display: flex; flex-direction: column; align-items: center; justify-cont
     <button class="last" id="lastDrive" hidden></button>
     <div class="list" id="list"></div>
     <button class="more" id="more" hidden></button>
+    <div class="buildbar" id="buildBar" hidden><div class="txt" id="buildText"></div><button class="clear" id="buildClear" aria-label="Clear picks">✕</button><button id="buildGo">Build route</button></div>
     <div class="about" id="about" hidden>
       <div class="logo"><img src="logo.webp" alt="Left Key Legends — Your car, your story." width="1240" height="1240"></div>
       <div class="social">
@@ -302,6 +322,27 @@ a.btn { display: flex; flex-direction: column; align-items: center; justify-cont
   </section>
 
   <!-- TRIP planner -->
+  <!-- BUILD (generated route) -->
+  <section id="build" hidden>
+    <div class="top"><div><button class="back" id="buildBack" aria-label="Back">‹ Pick roads</button></div></div>
+    <div class="hero">
+      <h2 id="bName"></h2>
+      <p class="plan" id="bChain"></p>
+      <svg class="sketch" id="bSketch" role="img" aria-label="Shape of the route"></svg>
+      <div class="facts" id="bFacts"></div>
+      <div class="legplan" id="bPlan"></div>
+    </div>
+    <h3>Finish</h3>
+    <div class="seg" id="bLoop" role="group"><button data-loop="1" aria-pressed="true">Back to start</button><button data-loop="0" aria-pressed="false">End at the last road</button></div>
+    <h3>Name it</h3>
+    <div class="titlebox"><input id="bTitle" placeholder="e.g. Sunday mountain loop" autocomplete="off"></div>
+    <div class="dock">
+      <button class="btn go" id="bStart">Save and start drive</button>
+      <button class="btn alt" id="bSave">Save to My routes<small>drive it later</small></button>
+    </div>
+    <div class="alt2" id="bScenic"></div>
+  </section>
+
   <section id="trip" hidden>
     <div class="top">
       <div class="brand"><span class="mark"><svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 30h18M2 36h14M6 24h12M10 42h8" stroke-width="2.4" opacity=".8"/><circle cx="36" cy="32" r="18" stroke-width="3.2"/><circle cx="36" cy="32" r="4" stroke-width="2.4"/><path d="M36 14v14M36 36v14M18 32h14M40 32h14" stroke-width="2" opacity=".55"/></g><path d="M46 8a26 26 0 0 1 14 24" fill="none" stroke="var(--lkl)" stroke-width="4" stroke-linecap="round"/></svg><h1>Left Key Legends <span>Routes</span><small>YOUR CAR, YOUR STORY.</small></h1></span><span class="from" id="tripFrom">from Home</span></div>
@@ -459,7 +500,7 @@ const store = {
 };
 
 // ---------- state ----------
-const prefs = Object.assign({ mode: 'home', space: 'mine', view: 'roads', ring: 2, runLen: 90, kind: 'any', tripKinds: [], budget: 60, picks: {}, near: null, nearRing: 2, nick: '' }, store.get('lkl.prefs', {}));
+const prefs = Object.assign({ mode: 'home', space: 'gen', genPicks: [], view: 'roads', ring: 2, runLen: 90, kind: 'any', tripKinds: [], budget: 60, picks: {}, near: null, nearRing: 2, nick: '' }, store.get('lkl.prefs', {}));
 // Rings: how long it takes to reach the start of a road or run from home.
 const RING = { 1: [0, 15], 2: [15, 60], 3: [60, 240], 4: [240, 0] };
 const ringOf = sec => sec <= 15 * 60 ? 1 : sec <= 60 * 60 ? 2 : sec <= 240 * 60 ? 3 : 4;
@@ -471,6 +512,7 @@ const sharedBoost = key => shared[key] && shared[key].n ? 0.8 + 0.2 * shared[key
 let shown = 10;
 let current = null;    // road on route screen
 let chosenStop = null; // {kind, i} or null
+if (prefs.space === 'near') prefs.space = 'gen';
 let drive = store.get('lkl.drive', null); // {kind:'road', key, stop, leg, at} or {kind:'trip', trip, keys:[...], leg, at}
 
 $('fromLabel').textContent = 'from ' + DATA.homeLabel;
@@ -641,6 +683,8 @@ async function connectRatings() {
   logDoc = db.doc('log/' + id);
   bookDoc = db.doc('bookings/' + id);
   groupsDb = db; myId = id;
+  savedDoc = db.doc('saved/' + id);
+  try { const snap = await savedDoc.get(); if (snap.exists) { const remote = (snap.data().routes || []); remote.forEach(r => { if (!savedById(r.id)) savedRoutes.push(r); }); savedRoutes.sort((a, b) => (b.at || '').localeCompare(a.at || '')); store.set('lkl.saved', savedRoutes); if (prefs.space === 'saved') renderSaved(); } } catch {}
   loadShared(db, id);
   try {
     const lsnap = await logDoc.get();
@@ -700,7 +744,7 @@ async function rate(key, r) {
 const ratingBoost = key => ratings[key] ? ({ 3: 1.6, 2: 1.2, 1: 0 })[ratings[key].r] : 1;
 
 // ---------- screens ----------
-function show(id) { ['pick', 'trip', 'route', 'run', 'rallyScreen', 'drive'].forEach(s => $(s).hidden = s !== id); window.scrollTo(0, 0); id === 'drive' ? gpsStart() : gpsStop(); }
+function show(id) { ['pick', 'trip', 'route', 'run', 'rallyScreen', 'drive', 'build'].forEach(s => $(s).hidden = s !== id); window.scrollTo(0, 0); id === 'drive' ? gpsStart() : gpsStop(); }
 const savePrefs = () => store.set('lkl.prefs', prefs);
 function renderAll() { if (!$('pick').hidden) render(); if (!$('trip').hidden) renderTrip(); if (!$('drive').hidden) renderDrive(); }
 
@@ -715,7 +759,8 @@ function renderModes() {
     });
   });
 }
-const SPACES = [{ id: 'mine', name: 'Soup routes' }, { id: 'near', name: 'Near me' }, { id: 'about', name: 'Left Key Legends' }];
+const SPACES = [{ id: 'gen', name: 'Generate route' }, { id: 'saved', name: 'My routes' }, { id: 'mine', name: 'Soup routes' }, { id: 'about', name: 'Left Key Legends' }];
+const GEN_SPACES = ['gen', 'saved'];
 function renderSpace() {
   const box = $('space'); box.replaceChildren();
   SPACES.forEach(sp => {
@@ -725,17 +770,18 @@ function renderSpace() {
   });
 }
 function setOrigin() {
-  if (prefs.space === 'near' && prefs.near) { HOME = [prefs.near.lat, prefs.near.lon]; DATA.homeLabel = prefs.near.label || 'You'; }
+  if (GEN_SPACES.includes(prefs.space) && prefs.near) { HOME = [prefs.near.lat, prefs.near.lon]; DATA.homeLabel = prefs.near.label || 'You'; }
   else { HOME = HOME0; DATA.homeLabel = HOME_LABEL0; }
   $('fromLabel').textContent = 'from ' + DATA.homeLabel;
 }
 function openMode() {
   renderSpace(); setOrigin();
   $('modes').hidden = prefs.space !== 'mine';
-  $('locBar').hidden = prefs.space !== 'near';
   $('about').hidden = prefs.space !== 'about';
+  renderGenBars();
   if (prefs.space === 'about') { renderAbout(); show('pick'); return; }
-  if (prefs.space === 'near') { renderNear(); show('pick'); return; }
+  if (prefs.space === 'gen') { renderNear(); show('pick'); return; }
+  if (prefs.space === 'saved') { renderSaved(); show('pick'); return; }
   renderModes();
   $('list').hidden = false;
   if (TRIPS.find(t => t.id === prefs.mode)) { renderTrip(); show('trip'); return; }
@@ -754,14 +800,15 @@ document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { if (b.da
 // ----- near home -----
 function matches() {
   const k = prefs.kind;
-  const pool = prefs.space === 'near' ? nearRoads : DATA.routes;
+  const pool = prefs.space === 'gen' ? nearRoads : DATA.routes;
   let rs = pool.filter(r => r.score >= 25 && ringOf(awaySec(r)) === prefs.ring && (k === 'any' || (r.stops[k] && r.stops[k].length)));
   rs.sort((a, b) => b.score * ratingBoost(b.key) * sharedBoost(b.key) - a.score * ratingBoost(a.key) * sharedBoost(a.key));
   return { list: rs.filter(r => !(ratings[r.key] && ratings[r.key].r === 1)), hidden: rs.filter(r => ratings[r.key] && ratings[r.key].r === 1) };
 }
 let showHidden = false;
 function render() {
-  const near = prefs.space === 'near';
+  const near = prefs.space === 'gen';
+  renderGenBars();
   const runsView = !near && pickView() === 'runs';
   $('rings').parentElement.hidden = false; $('list').hidden = false;
   $('viewToggle').hidden = near || !RUNS.length;
@@ -772,7 +819,7 @@ function render() {
   document.querySelectorAll('#rings button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.ring === prefs.ring)));
   document.querySelectorAll('#runLens button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.l === prefs.runLen)));
   $('ringNote').textContent = (prefs.ring === 4 ? 'start over 4 h from ' : `start ${RING[prefs.ring][0] ? RING[prefs.ring][0] + '–' : 'under '}${RING[prefs.ring][1]} min from `) + (near ? 'you' : 'home');
-  if (near && !nearRoads.length) { $('count').textContent = ''; $('list').replaceChildren(el('div', 'empty', nearStatus || 'Tap Use my location, or type a town.')); $('more').hidden = true; return; }
+  if (near && !nearRoads.length) { $('count').textContent = ''; $('list').replaceChildren(el('div', 'empty', nearStatus || 'Step 1: tap Use my location, or type a town.')); $('more').hidden = true; return; }
   if (runsView) return renderRuns();
   const { list, hidden } = matches();
   const rows = showHidden ? list.concat(hidden) : list;
@@ -781,10 +828,13 @@ function render() {
   if (!rows.length) box.appendChild(el('div', 'empty', 'No roads match. Try another ring or stop.'));
   rows.slice(0, shown).forEach(r => {
     const b = el('button', 'card');
+    const pickIdx = near ? prefs.genPicks.indexOf(r.key) : -1;
+    if (pickIdx >= 0) b.classList.add('picked');
     const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('aria-hidden', 'true');
     drawRoad(svg, r, { w: 100, h: 100, pad: 12 });
     const t = el('div', 'txt');
     const n = el('div', 'name', r.name);
+    if (pickIdx >= 0) n.prepend(el('span', 'num', String(pickIdx + 1)));
     const rt = ratings[r.key];
     if (rt) n.appendChild(el('span', 'pill ' + RATING[rt.r], RATING[rt.r]));
     const sh = shared[r.key];
@@ -795,7 +845,7 @@ function render() {
     const k = kinds.find(k => r.stops[k] && r.stops[k].length);
     t.appendChild(k ? el('div', 'stopline k-' + k, `${KIND[k]}: ${r.stops[k][0].name}`) : el('div', 'stopline meta', 'No stops mapped nearby'));
     b.append(svg, t);
-    b.onclick = () => openRoute(r);
+    b.onclick = () => near ? togglePick(r) : openRoute(r);
     box.appendChild(b);
   });
   const more = $('more');
@@ -815,7 +865,7 @@ async function fetchJson(url, ms = 15000) {
   try { const r = await fetch(url, { signal: ctl.signal }); if (!r.ok) throw new Error(r.status); return await r.json(); } finally { clearTimeout(t); }
 }
 async function loadNear(lat, lon, label) {
-  prefs.near = { lat, lon, label }; prefs.space = 'near'; savePrefs(); setOrigin();
+  prefs.near = { lat, lon, label }; prefs.space = 'gen'; savePrefs(); setOrigin();
   nearRoads = []; nearStatus = 'Finding roads near you…'; render();
   try {
     tileIndex = tileIndex || await fetchJson('tiles/index.json');
@@ -843,13 +893,14 @@ async function loadNear(lat, lon, label) {
     nearRoads = roads; nearStatus = '';
     const best = roads.filter(r => ringOf(awaySec(r)) <= 2);
     $('locNote').textContent = `${roads.length} good roads within reach of ${DATA.homeLabel}` + (best.length ? '' : ' — none under an hour, try Ring 3');
+    prefs.genPicks = prefs.genPicks.filter(k => roads.find(r => r.key === k)); savePrefs();
     if (!best.length && prefs.ring < 3) prefs.ring = 3;
     render();
   } catch (e) { nearStatus = 'Could not load the road map right now.'; render(); }
 }
 function renderNear() {
   ['viewToggle', 'runLens', 'lastDrive'].forEach(id => $(id).hidden = true);
-  $('kinds').hidden = false;
+  $('kinds').hidden = false; $('rings').parentElement.hidden = false; $('list').hidden = false;
   if (prefs.near && !nearRoads.length && !nearStatus) loadNear(prefs.near.lat, prefs.near.lon, prefs.near.label);
   else render();
 }
@@ -885,6 +936,146 @@ async function geocode() {
   } catch { $('locNote').textContent = 'Street addresses need the open web (open this page in Safari). A town name works here: try "Sylva NC".'; }
 }
 $('locGo').onclick = geocode;
+// ----- generate a route: origin -> picked roads -> build -> My routes -----
+let savedRoutes = store.get('lkl.saved', []);   // newest first
+let savedDoc = null, built = null;
+const savedById = id => savedRoutes.find(s => s.id === id) || null;
+async function saveSaved() {
+  store.set('lkl.saved', savedRoutes);
+  if (savedDoc) { try { await savedDoc.set({ routes: savedRoutes.slice(0, 100).map(s => ({ ...s, matrix: undefined })), updatedAt: new Date().toISOString() }); return true; } catch { return false; } }
+  return false;
+}
+function renderGenBars() {
+  const gen = prefs.space === 'gen', has = !!prefs.near;
+  $('genSteps').hidden = !gen; $('locBar').hidden = !gen || has; $('originBar').hidden = !gen || !has;
+  $('genHint').hidden = !gen || !has || !nearRoads.length;
+  if (gen && has) $('originText').textContent = 'Starting from ' + DATA.homeLabel;
+  const step = !has ? 1 : 2;
+  document.querySelectorAll('#genSteps span').forEach(sp => sp.classList.toggle('on', +sp.dataset.step === step));
+  const n = prefs.genPicks.length, bar = $('buildBar');
+  bar.hidden = !gen || !n;
+  if (!bar.hidden) {
+    const roads = prefs.genPicks.map(roadByKey).filter(Boolean);
+    const est = roads.reduce((a, r) => a + r.km / 55 * 3600, 0) + (roads[0] ? awaySec(roads[0]) * 2 : 0) + Math.max(0, roads.length - 1) * 15 * 60;
+    $('buildText').textContent = `${n} road${n > 1 ? 's' : ''} picked · roughly ${fmtTime(est)}`;
+  }
+}
+function togglePick(r) {
+  const i = prefs.genPicks.indexOf(r.key);
+  if (i >= 0) prefs.genPicks.splice(i, 1);
+  else if (prefs.genPicks.length >= 8) { $('buildText').textContent = 'Eight roads is plenty for one day. Build this one first.'; return; }
+  else prefs.genPicks.push(r.key);
+  savePrefs(); render();
+}
+$('buildClear').onclick = () => { prefs.genPicks = []; savePrefs(); render(); };
+$('originChange').onclick = () => { prefs.near = null; nearRoads = []; nearStatus = ''; prefs.genPicks = []; savePrefs(); openMode(); };
+// Drive-time matrix between the origin and both ends of every picked road (OSRM; straight-line guesses if it is unreachable).
+async function timeMatrix(pts) {
+  try {
+    const url = 'https://router.project-osrm.org/table/v1/driving/' + pts.map(p => p[1].toFixed(5) + ',' + p[0].toFixed(5)).join(';') + '?annotations=duration,distance';
+    const tb = await fetchJson(url, 25000);
+    return pts.map((_, i) => pts.map((_, j) => [tb.durations[i][j] ?? guess(pts[i], pts[j], 70)[0], (tb.distances && tb.distances[i][j]) ?? guess(pts[i], pts[j], 70)[1]]));
+  } catch { return pts.map(a => pts.map(b => guess(a, b, 70))); }
+}
+// Best order and direction for the picked roads: every order and orientation for up to 6 roads, greedy beyond.
+function planRoute(roads, M, loop) {
+  const n = roads.length, entry = (i, d) => 1 + 2 * i + d, exit = (i, d) => 1 + 2 * i + (1 - d);
+  const cost = (order, dirs) => { let c = M[0][entry(order[0], dirs[0])][0]; for (let k = 1; k < n; k++) c += M[exit(order[k - 1], dirs[k - 1])][entry(order[k], dirs[k])][0]; return c + (loop ? M[exit(order[n - 1], dirs[n - 1])][0][0] : 0); };
+  let best = null;
+  if (n <= 6) {
+    const perms = (arr) => arr.length <= 1 ? [arr] : arr.flatMap((x, i) => perms(arr.filter((_, j) => j !== i)).map(p => [x, ...p]));
+    for (const order of perms(roads.map((_, i) => i))) for (let mask = 0; mask < (1 << n); mask++) {
+      const dirs = order.map((_, k) => (mask >> k) & 1), c = cost(order, dirs);
+      if (!best || c < best.c) best = { order, dirs, c };
+    }
+  } else {
+    const left = roads.map((_, i) => i), order = [], dirs = []; let at = 0;
+    while (left.length) { let bi = 0, bd = 0, bc = Infinity; left.forEach((i, li) => [0, 1].forEach(d => { const c = M[at][entry(i, d)][0]; if (c < bc) { bc = c; bi = li; bd = d; } })); const i = left.splice(bi, 1)[0]; order.push(i); dirs.push(bd); at = exit(i, bd); }
+    best = { order, dirs, c: cost(order, dirs) };
+  }
+  return best;
+}
+function assembleRoute(roads, M, loop, origin, label) {
+  const { order, dirs } = planRoute(roads, M, loop);
+  const legs = [], path = [origin]; let sec = 0, m = 0, at = 0;
+  order.forEach((ri, k) => {
+    const r = roads[ri], d = dirs[k], a = d ? r.end : r.start, b = d ? r.start : r.end, ei = 1 + 2 * ri + d, xi = 1 + 2 * ri + (1 - d);
+    const hop = M[at][ei];
+    legs.push({ t: (k ? 'Hop to ' : 'Drive to ') + r.name, sub: `${fmtTime(hop[0])} · ${mi(hop[1] / 1000)} ${bearing(k ? path[path.length - 1] : origin, a)}, fastest way`, ll: a });
+    const rt = r.km / 55 * 3600;
+    legs.push({ t: 'Drive ' + r.name, sub: `${fmtTime(rt)} · ${mi(r.km)} of curves`, ll: b, road: r.key, roadName: r.name });
+    path.push(...chainLines(r.lines, a));
+    sec += hop[0] + rt; m += hop[1] + r.km * 1000; at = xi;
+  });
+  if (loop) { const back = M[at][0]; legs.push({ t: 'Back to ' + label, sub: `${fmtTime(back[0])} · ${mi(back[1] / 1000)}, fastest way`, ll: origin }); path.push(origin); sec += back[0]; m += back[1]; }
+  const names = order.map(i => roads[i].name);
+  return { legs, path, names, total: { sec, m }, roads: order.map(i => ({ ...roads[i], t: null })) };
+}
+async function buildRoute() {
+  const roads = prefs.genPicks.map(roadByKey).filter(Boolean);
+  if (!roads.length || !prefs.near) return;
+  $('buildText').textContent = 'Working out the fastest order…'; $('buildGo').disabled = true;
+  const origin = [prefs.near.lat, prefs.near.lon], label = DATA.homeLabel;
+  const pts = [origin].concat(roads.flatMap(r => [r.start, r.end]));
+  const M = await timeMatrix(pts);
+  $('buildGo').disabled = false;
+  built = { id: 'r-' + Date.now().toString(36), origin: { lat: origin[0], lon: origin[1], label }, loop: true, picked: roads, matrix: M, title: '' };
+  Object.assign(built, assembleRoute(roads, M, true, origin, label));
+  $('bTitle').value = '';
+  renderBuild(); show('build');
+}
+$('buildGo').onclick = buildRoute;
+const defaultTitle = b => b.names.length === 1 ? b.names[0] + (b.loop ? ' loop' : '') : `${b.names[0]} + ${b.names.length - 1} more`;
+function renderBuild() {
+  const b = built; if (!b) return;
+  $('bName').textContent = b.title || defaultTitle(b);
+  $('bChain').textContent = `${b.origin.label} → ${b.names.join(' → ')}` + (b.loop ? ` → ${b.origin.label}` : '');
+  const svg = $('bSketch'); svg.replaceChildren(); svg.setAttribute('viewBox', '0 0 400 300');
+  const lonlat = b.path.map(([la, lo]) => [lo, la]), P = fitter(lonlat, 400, 300, 26);
+  addPath(svg, pathD([lonlat], P), { stroke: 'var(--muted)', 'stroke-width': 2, 'stroke-dasharray': '4 5' });
+  b.roads.forEach(r => addPath(svg, pathD(r.lines, P), { stroke: 'var(--paint)', 'stroke-width': 4 }));
+  addDot(svg, P([b.origin.lon, b.origin.lat]), 'S', 'var(--fg)', 9);
+  const f = $('bFacts'); f.replaceChildren();
+  const curveSec = b.roads.reduce((a, r) => a + r.km / 55 * 3600, 0);
+  [[miNum(b.total.m / 1000), 'miles'], [Math.round(100 * curveSec / b.total.sec) + '%', 'on curves'], [fmtShort(b.total.sec), b.loop ? 'round trip' : 'one way']].forEach(([v, l]) => { const d = el('div', 'fact'); d.append(el('b', '', String(v)), el('span', '', l)); f.appendChild(d); });
+  const plan = $('bPlan'); plan.replaceChildren();
+  b.legs.forEach((l, i) => { const row = el('div', 'lp' + (l.road ? '' : ' hop')); row.append(el('span', 'n', String(i + 1)), el('span', '', l.t), el('span', 'tm', l.sub.split(' · ')[0])); plan.appendChild(row); });
+  document.querySelectorAll('#bLoop button').forEach(x => x.setAttribute('aria-pressed', String(!!+x.dataset.loop === b.loop)));
+  renderScenic($('bScenic'), b.path, b.title || defaultTitle(b));
+}
+document.querySelectorAll('#bLoop button').forEach(x => x.onclick = () => { if (!built) return; built.loop = !!+x.dataset.loop; Object.assign(built, assembleRoute(built.picked, built.matrix, built.loop, [built.origin.lat, built.origin.lon], built.origin.label)); renderBuild(); });
+$('bTitle').addEventListener('input', () => { if (built) { built.title = $('bTitle').value.trim(); $('bName').textContent = built.title || defaultTitle(built); } });
+$('buildBack').onclick = () => { prefs.space = 'gen'; savePrefs(); openMode(); };
+function commitBuilt() {
+  const b = built; if (!b) return null;
+  const s = { id: b.id, title: b.title || defaultTitle(b), origin: b.origin, loop: b.loop, roads: b.roads, legs: b.legs, path: b.path, names: b.names, total: b.total, at: new Date().toISOString() };
+  savedRoutes = savedRoutes.filter(x => x.id !== s.id); savedRoutes.unshift(s); saveSaved();
+  prefs.genPicks = []; savePrefs();
+  return s;
+}
+$('bSave').onclick = () => { if (commitBuilt()) { built = null; prefs.space = 'saved'; savePrefs(); openMode(); } };
+$('bStart').onclick = () => { const s = commitBuilt(); if (s) { built = null; beginDrive({ kind: 'saved', id: s.id, leg: 0, at: Date.now() }); } };
+function renderSaved() {
+  ['viewToggle', 'kinds', 'runLens', 'lastDrive'].forEach(id => $(id).hidden = true);
+  $('rings').parentElement.hidden = true; $('list').hidden = false; $('more').hidden = true; $('buildBar').hidden = true;
+  const box = $('list'); box.replaceChildren();
+  $('count').textContent = savedRoutes.length ? savedRoutes.length + (savedRoutes.length === 1 ? ' route' : ' routes') : '';
+  if (!savedRoutes.length) { box.appendChild(el('div', 'empty', 'No routes yet. Tap Generate route, set where you start, pick roads and build one.')); return; }
+  savedRoutes.forEach(s => {
+    const c = el('div', 'saved');
+    const n = el('div', 'name', s.title);
+    c.appendChild(n);
+    c.appendChild(el('div', 'meta', `${s.roads.length} road${s.roads.length > 1 ? 's' : ''} · ${mi(s.total.m / 1000)} · ${fmtTime(s.total.sec)} ${s.loop ? 'round trip' : 'one way'} · from ${s.origin.label}`));
+    c.appendChild(el('div', 'plan', s.names.join(' → ')));
+    const row = el('div', 'row');
+    const go = el('button', 'go', 'Start drive'); go.onclick = () => beginDrive({ kind: 'saved', id: s.id, leg: 0, at: Date.now() });
+    const sc = el('button', '', 'Scenic'); sc.onclick = () => { const poly = encodePolyline(thin(s.path, 180)); window.open(`https://scenicapp.space/api/openScenic.php?navigatepolyline=${poly}&name=${encodeURIComponent(s.title)}&routeMode=C&vehicleType=C`, '_blank', 'noopener'); };
+    const del = el('button', 'del', '✕'); del.setAttribute('aria-label', 'Delete route'); del.onclick = () => { if (confirm('Delete "' + s.title + '"?')) { savedRoutes = savedRoutes.filter(x => x.id !== s.id); saveSaved(); renderSaved(); } };
+    row.append(go, sc, del); c.appendChild(row);
+    box.appendChild(c);
+  });
+}
+
 // ----- diagnostics (so phone problems can be read back) -----
 async function runChecks() {
   const out = $('diag'); const lines = []; const say = l => { lines.push(l); out.textContent = lines.join('\n'); };
@@ -1345,6 +1536,7 @@ const groupCodeOf = () => drive && drive.group;
 function driveDescriptor() {
   const d = { kind: drive.kind, key: drive.key, stop: drive.stop, region: drive.region, id: drive.id, trip: drive.trip, keys: drive.keys, rally: drive.rally, li: drive.li, leg: 0, at: Date.now() };
   if (d.kind === 'road' && !DATA.routes.find(x => x.key === d.key)) { const r = roadByKey(d.key); if (r) d.road = { ...r, t: null }; }
+  if (d.kind === 'saved') { const s = savedById(d.id); if (s) d.saved = s; }
   return d;
 }
 async function startGroup() {
@@ -1363,8 +1555,9 @@ async function joinGroup(code) {
     if (!snap.exists) { alert('No group with that code.'); return; }
     const g = snap.data();
     if (g.drive.road && !roadByKey(g.drive.key)) nearRoads.push(g.drive.road);
+    if (g.drive.saved && !savedById(g.drive.id)) { savedRoutes.unshift(g.drive.saved); saveSaved(); }
     const d = { ...g.drive, at: Date.now(), group: code };
-    delete d.road;
+    delete d.road; delete d.saved;
     beginDrive(d);
   } catch { alert('Could not join right now.'); }
 }
@@ -1440,8 +1633,9 @@ function gpsFix(pos) {
   g.textContent = next ? `${mi(distM(here, next.ll) / 1000)} straight-line to ${legPlace(next)}` : 'You made it. End the drive when you’re ready.';
 }
 
-const roadByKey = key => DATA.routes.find(x => x.key === key) || nearRoads.find(x => x.key === key) || null;
+const roadByKey = key => DATA.routes.find(x => x.key === key) || nearRoads.find(x => x.key === key) || savedRoutes.flatMap(s => s.roads).find(x => x.key === key) || null;
 function driveLegs() {
+  if (drive.kind === 'saved') { const s = savedById(drive.id); return s ? s.legs : []; }
   if (drive.kind === 'trip') { const t = tripById(drive.trip); return t ? tripLegs(t, drive.keys) : []; }
   if (drive.kind === 'run') { const u = runById(drive.region, drive.id); return u ? runLegs(u, drive.stop) : []; }
   if (drive.kind === 'rally') { const y = rallyById(drive.rally); return y ? rallyLegs(y, drive.li) : []; }
@@ -1449,12 +1643,14 @@ function driveLegs() {
 }
 // The route's shape, for Scenic.
 function drivePath() {
+  if (drive.kind === 'saved') { const s = savedById(drive.id); return s ? s.path : []; }
   if (drive.kind === 'trip') { const t = tripById(drive.trip); if (!t) return []; const picks = t.detours.filter(d => drive.keys.includes(d.key)); return [HOME].concat(picks.flatMap(d => chainLines(d.lines, d.start)), [t.dest]); }
   if (drive.kind === 'run') { const u = runById(drive.region, drive.id); if (!u) return []; const stop = runStopOf(u, drive.stop), pts = u.legs.filter(l => l.kind === 'road').flatMap(l => chainLines(l.lines, l.from)); if (stop) pts.push([stop.lat, stop.lon]); return pts; }
   if (drive.kind === 'rally') { const y = rallyById(drive.rally); return y ? y.legs[drive.li].route.map(([lon, lat]) => [lat, lon]) : []; }
   const r = roadByKey(drive.key); return r ? roadPath(r, stopOf(r, drive.stop)) : [];
 }
 function driveTitle() {
+  if (drive.kind === 'saved') { const s = savedById(drive.id); return s ? s.title : ''; }
   if (drive.kind === 'trip') { const t = tripById(drive.trip); return t ? `${DATA.homeLabel} → ${t.name}` : ''; }
   if (drive.kind === 'run') { const u = runById(drive.region, drive.id); return u ? u.names[0] + ' → ' + u.names[u.names.length - 1] : ''; }
   if (drive.kind === 'rally') { const y = rallyById(drive.rally); return y ? (y.legs[drive.li].day ? y.legs[drive.li].day + ' · ' : '') + y.legs[drive.li].name : ''; }
@@ -1549,7 +1745,8 @@ async function finishDrive(withVerdict) {
   try { wakeLock && wakeLock.release(); } catch {}
   $('endSheet').hidden = true; $('endBtn').hidden = false;
   const ok = await saveLog();
-  prefs.mode = 'log'; savePrefs(); openMode();
+  if (prefs.space === 'mine') prefs.mode = 'log'; else prefs.space = 'saved';
+  savePrefs(); openMode();
   $('count').textContent = ok ? 'Saved to your account' : 'Saved on this phone';
 }
 $('endSave').onclick = () => finishDrive(true);
@@ -1558,7 +1755,7 @@ $('endSkip').onclick = () => finishDrive(false);
 // ----- my drives -----
 function renderLastDrive() {
   const e = log[0], card = $('lastDrive');
-  if (!e || prefs.mode !== 'home') { card.hidden = true; return; }
+  if (!e || prefs.mode !== 'home' || prefs.space !== 'mine') { card.hidden = true; return; }
   card.hidden = false; card.replaceChildren();
   card.appendChild(el('div', 'l1', 'Last drive · ' + fmtDate(e.startedAt)));
   const l2 = el('div', 'l2', e.title);
