@@ -1,5 +1,14 @@
+<meta charset="utf-8">
 <title>Left Key Legends Routes</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#12161b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LKL Routes">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -62,6 +71,15 @@ h1 span { color: var(--paint); }
 .titlebox input { width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--edge); background: var(--shoulder); color: var(--fg); font: 500 15px var(--body); }
 .space button { min-height: 40px; border-radius: 12px; border: 1px solid var(--edge); background: var(--shoulder); font-weight: 600; font-size: 14px; }
 .space button[aria-pressed="true"] { background: var(--fg); color: var(--asphalt); border-color: var(--fg); }
+.homebar { display: flex; align-items: center; gap: 10px; margin-top: 6px; min-height: 38px; padding: 0 12px; border-radius: 12px; border: 1px dashed var(--edge); background: transparent; color: var(--fg); font-size: 13px; text-align: left; width: 100%; }
+.homebar b { color: var(--paint, #e8ebee); }
+.homebar .x { margin-left: auto; opacity: .6; font-size: 18px; line-height: 1; padding: 4px 2px; }
+.sheet { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; z-index: 50; }
+.sheet > div { background: var(--shoulder); border-radius: 18px 18px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); width: 100%; }
+.sheet h3 { margin: 0 0 10px; font-family: var(--head, inherit); font-size: 20px; }
+.sheet ol { margin: 0 0 14px; padding-left: 20px; line-height: 1.5; font-size: 15px; }
+.sheet ol li + li { margin-top: 6px; }
+.sheet .ok { width: 100%; min-height: 44px; border-radius: 12px; border: 0; background: var(--fg); color: var(--asphalt); font-weight: 600; font-size: 15px; }
 .locbar { display: grid; gap: 8px; }
 .locbar .row { display: flex; gap: 8px; }
 .locbar input { flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--edge); background: var(--shoulder); color: var(--fg); font: 500 15px var(--body); }
@@ -263,6 +281,7 @@ a.btn { display: flex; flex-direction: column; align-items: center; justify-cont
     <div class="top">
       <div class="brand"><span class="mark"><svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 30h18M2 36h14M6 24h12M10 42h8" stroke-width="2.4" opacity=".8"/><circle cx="36" cy="32" r="18" stroke-width="3.2"/><circle cx="36" cy="32" r="4" stroke-width="2.4"/><path d="M36 14v14M36 36v14M18 32h14M40 32h14" stroke-width="2" opacity=".55"/></g><path d="M46 8a26 26 0 0 1 14 24" fill="none" stroke="var(--lkl)" stroke-width="4" stroke-linecap="round"/></svg><h1>Left Key Legends <span>Routes</span><small>YOUR CAR, YOUR STORY.</small></h1></span><span class="from" id="fromLabel">from Home</span></div>
       <div class="space" id="space" role="tablist"></div>
+      <button class="homebar" id="homeBar" hidden><span>📲</span><span><b>Add to Home Screen</b> · opens like an app, full screen</span><span class="x" id="homeBarX" aria-label="Hide">×</span></button>
       <div class="modes" id="modes" role="tablist"></div>
       <div class="steps" id="genSteps" hidden><span data-step="1">1 · Start</span><span data-step="2">2 · Pick roads</span><span data-step="3">3 · Build</span></div>
       <div class="origin" id="originBar" hidden><span id="originText"></span><button id="originChange">Change</button></div>
@@ -769,13 +788,40 @@ function renderSpace() {
     box.appendChild(b);
   });
 }
+// ----- add to home screen -----
+// A page can't install itself on iPhone, so this explains the Share-sheet route; Android gets the real install prompt when the browser offers it.
+const STANDALONE = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+const IN_FRAME = window.top !== window.self;
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; renderHomeBar(); });
+function renderHomeBar() {
+  $('homeBar').hidden = STANDALONE || IN_FRAME || !!prefs.hideHome;
+}
+function homeSheet() {
+  if (installEvt) { installEvt.prompt(); installEvt = null; return; }
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const safari = ios && !/CriOS|FxiOS|EdgiOS|GSA|FBAN|Instagram/.test(ua);
+  const steps = ios
+    ? (safari ? ['Tap the <b>Share</b> button at the bottom of Safari (the square with an arrow).', 'Scroll down and tap <b>Add to Home Screen</b>.', 'Tap <b>Add</b>. The LKL Routes icon lands on your home screen.']
+              : ['Open this link in <b>Safari</b> first (other iPhone browsers can\'t add apps).', 'Tap the <b>Share</b> button, then <b>Add to Home Screen</b>, then <b>Add</b>.'])
+    : ['Tap the browser menu (<b>⋮</b>) in the top right.', 'Tap <b>Add to Home screen</b> or <b>Install app</b>.', 'Tap <b>Add</b>.'];
+  const box = el('div', 'sheet'); const inner = el('div');
+  inner.appendChild(el('h3', '', 'Put it on your home screen'));
+  const ol = el('ol'); steps.forEach(t => { const li = el('li'); li.innerHTML = t; ol.appendChild(li); }); inner.appendChild(ol);
+  const ok = el('button', 'ok', 'Got it'); ok.onclick = () => box.remove(); inner.appendChild(ok);
+  box.appendChild(inner); box.onclick = e => { if (e.target === box) box.remove(); };
+  document.body.appendChild(box);
+}
+$('homeBar').onclick = homeSheet;
+$('homeBarX').onclick = e => { e.stopPropagation(); prefs.hideHome = true; savePrefs(); renderHomeBar(); };
 function setOrigin() {
   if (GEN_SPACES.includes(prefs.space) && prefs.near) { HOME = [prefs.near.lat, prefs.near.lon]; DATA.homeLabel = prefs.near.label || 'You'; }
   else { HOME = HOME0; DATA.homeLabel = HOME_LABEL0; }
   $('fromLabel').textContent = 'from ' + DATA.homeLabel;
 }
 function openMode() {
-  renderSpace(); setOrigin();
+  renderSpace(); setOrigin(); renderHomeBar();
   $('modes').hidden = prefs.space !== 'mine';
   $('about').hidden = prefs.space !== 'about';
   renderGenBars();
@@ -1074,7 +1120,36 @@ function renderSaved() {
     row.append(go, sc, del); c.appendChild(row);
     box.appendChild(c);
   });
+  // Move everything (routes, ratings, drive log) to another browser or phone: one link carries it all.
+  const mv = el('button', 'btn', 'Copy link to move my routes');
+  mv.style.marginTop = '14px';
+  mv.appendChild(el('small', '', 'open it in the home-screen app or another phone'));
+  mv.onclick = async () => {
+    const payload = { saved: savedRoutes, ratings, log };
+    const url = APP_URL + (APP_URL.includes('#') ? '&' : '#') + 'sync=' + btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    if (navigator.share) { try { await navigator.share({ url }); return; } catch {} }
+    try { await navigator.clipboard.writeText(url); mv.lastChild.textContent = 'link copied'; } catch { prompt('Copy this link', url); }
+  };
+  box.appendChild(mv);
 }
+function importSync() {
+  const m = /[#&]sync=([A-Za-z0-9_-]+)/.exec(location.hash);
+  if (!m) return;
+  try {
+    const p = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g, '+').replace(/_/g, '/')))));
+    let n = 0;
+    (p.saved || []).forEach(r => { if (!savedById(r.id)) { savedRoutes.push(r); n++; } });
+    savedRoutes.sort((a, b) => (b.at || '').localeCompare(a.at || '')); saveSaved();
+    Object.entries(p.ratings || {}).forEach(([k, v]) => { if (!ratings[k] || (v.at || '') > (ratings[k].at || '')) ratings[k] = v; });
+    store.set('lkl.ratings', ratings);
+    (p.log || []).forEach(e => { if (!log.find(x => x.id === e.id)) log.push(e); });
+    log.sort((a, b) => (b.at || '').localeCompare(a.at || '')); store.set('lkl.log', log);
+    prefs.space = 'saved'; savePrefs();
+    alert(n + (n === 1 ? ' route' : ' routes') + ' moved here, plus your ratings and drive log.');
+  } catch (e) { alert('That move link could not be read.'); }
+  history.replaceState(null, '', location.pathname + location.search + (location.hash.includes('no_universal_links') ? '#no_universal_links' : ''));
+}
+importSync();
 
 // ----- diagnostics (so phone problems can be read back) -----
 async function runChecks() {
